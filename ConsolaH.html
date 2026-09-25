@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<style>
+  /* ============================================================
+     Paleta morada. Los neutros llevan una pizca de violeta para que
+     no peleen con el acento: un gris puro al lado de este morado se
+     ve sucio. Todo lo que use color sale de estas variables — las
+     otras pestañas dependen de ellas.
+     ============================================================ */
+  :root{
+    --bg:#f6f5fa; --panel:#ffffff; --line:#e3e0ee;
+    --ink:#1a1626; --soft:#585073; --faint:#8b84a3;
+
+    --acc:#5b2ee5; --acc-bg:#eeeaff; --acc-fuerte:#4a20cc;
+    --ok:#0d7a5a;  --ok-bg:#e2f4ee;
+    --bad:#b5214a; --bad-bg:#fce8ee;
+    --warn:#8a5606; --warn-bg:#fcf1dc;
+    --na:#5f5878;  --na-bg:#eeecf4;
+
+    --r:9px;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sombra:0 1px 2px rgba(26,22,38,.05), 0 10px 26px -18px rgba(26,22,38,.35);
+    --sombra-alta:0 -6px 20px -14px rgba(26,22,38,.5);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#100d1a; --panel:#1a1626; --line:#2c2740;
+      --ink:#ece9f6; --soft:#a49dbe; --faint:#786f96;
+
+      --acc:#a891ff; --acc-bg:#241b4d; --acc-fuerte:#b9a6ff;
+      --ok:#5fceab;  --ok-bg:#0e3229;
+      --bad:#f490ab; --bad-bg:#3d1524;
+      --warn:#e0a94a; --warn-bg:#3a2a10;
+      --na:#9d95b8;  --na-bg:#25203a;
+
+      --sombra:0 1px 2px rgba(0,0,0,.45), 0 10px 26px -18px rgba(0,0,0,.9);
+      --sombra-alta:0 -6px 20px -14px rgba(0,0,0,.8);
+    }
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  button{font:inherit;cursor:pointer}
+  h1,h2,h3{margin:0;font-weight:650;letter-spacing:-.012em}
+  a{color:var(--acc)}
+  :focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:4px}
+
+  /* ---------- cabecera ---------- */
+  .top{
+    background:linear-gradient(180deg,var(--panel),var(--panel));
+    border-bottom:1px solid var(--line);
+    padding:14px 22px;display:flex;flex-wrap:wrap;gap:22px;align-items:center;
+  }
+  .marca{display:flex;align-items:center;gap:11px;margin-right:auto}
+  .glifo{
+    width:30px;height:30px;border-radius:9px;flex:0 0 30px;
+    background:linear-gradient(140deg,var(--acc),#8b5cf6);
+    display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px;letter-spacing:-.02em;
+  }
+  .top h1{font-size:15px;line-height:1.2}
+  .top h1 span{display:block;font-size:10.5px;font-weight:500;color:var(--faint);
+               letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+  /* ---------- panel de mantenimiento ---------- */
+  #t5 .item{background:var(--panel);border:1px solid var(--line);border-left-width:3px;
+    border-radius:var(--r);padding:13px 16px;margin-bottom:11px;box-shadow:var(--sombra)}
+  #t5 .item.problema{border-left-color:var(--bad)}
+  #t5 .item.decision{border-left-color:var(--warn)}
+  #t5 .item.info{border-left-color:var(--na)}
+  #t5 .item h3{font-size:13.5px;display:flex;align-items:center;gap:9px}
+  #t5 .etq{font-size:10px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;
+    padding:2px 7px;border-radius:99px;flex:0 0 auto}
+  #t5 .problema .etq{background:var(--bad-bg);color:var(--bad)}
+  #t5 .decision .etq{background:var(--warn-bg);color:var(--warn)}
+  #t5 .info .etq{background:var(--na-bg);color:var(--na)}
+  #t5 .item p{margin:7px 0 0;font-size:13px;color:var(--soft);line-height:1.5}
+  #t5 .item .sug{color:var(--ink)}
+  #t5 .item .fila{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:11px}
+  #t5 .item textarea{width:100%;margin-top:9px;font:12px/1.5 var(--mono);padding:8px 10px;
+    border:1px solid var(--line);border-radius:6px;background:var(--bg);color:inherit;
+    resize:vertical;min-height:54px}
+  #t5 .embudo{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+    box-shadow:var(--sombra);margin-top:16px;overflow:hidden}
+  #t5 .embudo h3{font-size:13px;padding:13px 16px 11px;border-bottom:1px solid var(--line)}
+  #t5 .paso{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;gap:14px;
+    align-items:flex-start}
+  #t5 .paso:last-child{border-bottom:0}
+  #t5 .paso .num{font-size:22px;font-weight:650;font-variant-numeric:tabular-nums;
+    min-width:64px;text-align:right;line-height:1.2}
+  #t5 .paso .cae{color:var(--bad);font-weight:600}
+  #t5 .paso .qt{font-size:13px;font-weight:550}
+  #t5 .paso ul{margin:6px 0 0;padding-left:18px;font-size:12.5px;color:var(--soft)}
+  #t5 .paso .mini{font-size:11.5px;color:var(--faint);margin-top:4px}
+  .sel-aud{display:flex;flex-direction:column;gap:2px;margin-right:6px}
+  .sel-aud label{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+  .sel-aud select{font:inherit;font-size:13px;padding:4px 8px;border-radius:6px;
+    border:1px solid var(--linea);background:var(--fondo);color:inherit}
+  .kpi{text-align:right;min-width:66px}
+  .kpi b{display:block;font-size:20px;font-weight:650;font-variant-numeric:tabular-nums;line-height:1.15}
+  .kpi span{font-size:11px;color:var(--faint)}
+
+  /* ---------- pestañas ---------- */
+  nav{display:flex;gap:2px;padding:0 18px;background:var(--panel);
+      border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30;overflow-x:auto}
+  nav button{
+    border:none;background:transparent;color:var(--soft);padding:13px 17px;
+    font-size:13.5px;border-bottom:2px solid transparent;white-space:nowrap;
+  }
+  nav button:hover{color:var(--ink)}
+  nav button b{display:inline-block;background:var(--na-bg);color:var(--na);border-radius:20px;
+    font-size:11px;padding:1px 8px;margin-left:8px;font-variant-numeric:tabular-nums;font-weight:600}
+  nav button.on{color:var(--acc);border-bottom-color:var(--acc);font-weight:600}
+  nav button.on b{background:var(--acc-bg);color:var(--acc)}
+
+  .tab{display:none}
+  .tab.on{display:block}
+  .pad{padding:26px 22px 80px;max-width:940px}
+
+  /* ---------- bloques ---------- */
+  .paso{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+        padding:21px 23px;margin-bottom:16px;box-shadow:var(--sombra)}
+  .paso h2{font-size:16px;margin-bottom:5px;display:flex;align-items:center;gap:11px}
+  .paso h2 i{
+    font-style:normal;width:25px;height:25px;border-radius:8px;flex:0 0 25px;
+    background:var(--acc-bg);color:var(--acc);display:grid;place-items:center;
+    font-size:12px;font-weight:700;text-transform:uppercase;
+  }
+  .paso p{margin:0 0 14px;color:var(--soft);font-size:13.5px;max-width:70ch}
+  .paso p:last-child{margin-bottom:0}
+  .paso .sub{font-size:12.5px;margin:16px 0 7px;color:var(--ink);font-weight:600}
+
+  textarea,input[type=text]{
+    width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r);
+    background:var(--bg);color:var(--ink);font:12.5px/1.55 var(--mono);
+  }
+  textarea:focus,input:focus{border-color:var(--acc);outline:none}
+  textarea.lista{min-height:86px}
+  textarea.pegar{min-height:180px}
+  textarea.corto{min-height:118px}
+  input[type=file]{font:inherit;font-size:13px;color:var(--soft)}
+
+  .btn{background:var(--acc);color:#fff;border:none;padding:9px 19px;border-radius:var(--r);
+       font-weight:600;font-size:13.5px}
+  .btn:hover{background:var(--acc-fuerte)}
+  .btn.sec{background:transparent;color:var(--soft);border:1px solid var(--line);font-weight:500}
+  .btn.sec:hover{border-color:var(--acc);color:var(--acc);background:transparent}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  a.btn{text-decoration:none;display:inline-block;line-height:1.5}
+  .acciones{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:13px}
+
+  /* ---- entrenamiento (pestaña 5) ---- */
+  .ent{margin-top:28px;padding-top:24px;border-top:1px solid var(--line)}
+  .ent h3{margin:0 0 6px;font-size:15.5px;font-weight:650}
+  .ent .ent-int{margin:0;font-size:13px;color:var(--soft);max-width:70ch;line-height:1.6}
+  .ent .ent-pie{margin:11px 0 0;font-size:11.5px;color:var(--faint);max-width:70ch;line-height:1.55}
+  .ent-kpis{display:flex;flex-wrap:wrap;gap:10px;margin:15px 0 0}
+  .ent-kpis div{border:1px solid var(--line);border-radius:var(--r);padding:9px 14px;min-width:104px}
+  .ent-kpis b{display:block;font-size:19px;font-weight:650;font-variant-numeric:tabular-nums;line-height:1.2}
+  .ent-kpis span{font-size:10.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em}
+  .ent-kpis div.vacio b{color:var(--faint)}
+  .msg{font-size:12.5px;color:var(--faint)}
+  .msg.ok{color:var(--ok)} .msg.err{color:var(--bad)} .msg.warn{color:var(--warn)}
+
+  .cuenta{display:flex;gap:28px;flex-wrap:wrap;margin:0 0 16px;padding:15px 18px;
+          background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
+  .cuenta div b{display:block;font-size:23px;font-weight:650;font-variant-numeric:tabular-nums;line-height:1.1}
+  .cuenta div span{font-size:11.5px;color:var(--faint)}
+
+  .barra{height:5px;background:var(--na-bg);border-radius:3px;overflow:hidden;margin:13px 0 4px}
+  .barra i{display:block;height:100%;background:var(--acc);width:0;transition:width .25s}
+
+  /* ---------- tabla ---------- */
+  .scroll{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--panel)}
+  table{border-collapse:collapse;width:100%;font-size:13px;min-width:620px}
+  th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line)}
+  th{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);
+     font-weight:600;position:sticky;top:0;background:var(--panel)}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:var(--bg)}
+  tbody tr.sel{background:var(--acc-bg)}
+  td.n{font-variant-numeric:tabular-nums;font-weight:600}
+  .mini{font-size:10.5px;padding:2px 8px;border-radius:20px;background:var(--na-bg);color:var(--na);font-weight:600}
+  .mini.alerta{background:var(--warn-bg);color:var(--warn)}
+  .mini.bien{background:var(--ok-bg);color:var(--ok)}
+  .elegir{border:1px solid var(--line);background:transparent;color:var(--acc);
+          padding:4px 13px;border-radius:7px;font-size:12px}
+  .elegir:hover{border-color:var(--acc);background:var(--acc-bg)}
+
+  .resultado{border:1px solid var(--line);border-radius:var(--r);padding:16px 19px;
+             margin-top:15px;background:var(--bg)}
+  .resultado .nota{font-size:32px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1;color:var(--acc)}
+  .resultado .nota.cero{color:var(--bad)}
+  .resultado ul{margin:10px 0 0;padding-left:19px;font-size:12.5px;color:var(--soft)}
+
+  .auto{background:var(--acc-bg);border:1px solid var(--acc);border-radius:var(--r);
+        padding:18px 20px;margin-bottom:16px}
+  .auto h2{font-size:15px;margin-bottom:5px;color:var(--acc)}
+  .auto p{color:var(--soft);font-size:13px;margin-bottom:12px}
+  .corridas{margin-top:14px;max-height:340px;overflow-y:auto;border-top:1px solid var(--line);padding-top:10px}
+  .corrida{display:flex;gap:12px;align-items:baseline;padding:6px 0;font-size:13px;
+           border-bottom:1px solid var(--line)}
+  .corrida:last-child{border-bottom:none}
+  .corrida .tk{font-variant-numeric:tabular-nums;font-weight:600;min-width:80px}
+  .corrida .nt{font-variant-numeric:tabular-nums;font-weight:700;min-width:38px;color:var(--acc)}
+  .corrida .nt.cero{color:var(--bad)}
+  .corrida .det{color:var(--faint);font-size:12px}
+  .corrida.mal .nt{color:var(--bad)}
+  .corrida.mal .det{color:var(--bad)}
+
+  /* Modo desatendido: se distingue del bloque de "auditar mirando" porque
+     son dos cosas distintas — una la conduce el navegador, la otra no. */
+  .desat{border:1px solid var(--line);background:var(--panel);border-radius:var(--r);
+         padding:18px 20px;margin-bottom:16px}
+  .desat.on{border-color:var(--ok);background:var(--ok-bg)}
+  .desat h2{font-size:15px;margin-bottom:5px;display:flex;align-items:center;gap:9px}
+  .desat p{color:var(--soft);font-size:13px;margin-bottom:12px;line-height:1.55}
+  .desat .luz{width:9px;height:9px;border-radius:99px;background:var(--faint);flex:0 0 auto}
+  .desat.on .luz{background:var(--ok);box-shadow:0 0 0 3px var(--ok-bg)}
+  .desat .cifras{display:flex;flex-wrap:wrap;gap:18px;margin:12px 0 0;font-size:12.5px}
+  .desat .cifras div{color:var(--faint)}
+  .desat .cifras b{display:block;font-size:19px;font-weight:650;color:inherit;
+                   font-variant-numeric:tabular-nums;line-height:1.2}
+  .desat .aviso{border:1px solid var(--warn);background:var(--warn-bg);color:var(--warn);
+                border-radius:6px;padding:9px 12px;font-size:12.5px;margin:12px 0 0;line-height:1.5}
+  .desat table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:12px}
+  .desat th{text-align:left;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;
+            color:var(--faint);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line)}
+  .desat td{padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  .desat td.tk{font-variant-numeric:tabular-nums;font-weight:600}
+  .desat .bit{max-height:260px;overflow:auto;margin-top:6px}
+  .desat .res{font-size:11px;font-weight:600;padding:1px 6px;border-radius:99px;
+              background:var(--bg);border:1px solid var(--line);white-space:nowrap}
+  .desat .res.ok{background:var(--ok-bg);color:var(--ok);border-color:var(--ok)}
+  .desat .res.mal{background:var(--bad-bg);color:var(--bad);border-color:var(--bad)}
+  .desat .res.esp{background:var(--na-bg);color:var(--na);border-color:var(--na)}
+
+  .vacio{color:var(--faint);padding:34px 12px;text-align:center;font-size:13.5px}
+  .nota-pie{font-size:12px;color:var(--faint);margin-top:9px}
+  code{font:12px var(--mono);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="marca">
+    <div class="glifo">QA</div>
+    <h1>Consola de auditoría<span id="sub">Cabify Chile</span></h1>
+  </div>
+  <div class="sel-aud" id="caja-aud" style="display:none">
+    <label for="f-aud">Audiencia</label>
+    <select id="f-aud"><option value="">Todas</option></select>
+  </div>
+  <div class="kpi"><b id="s-aud">–</b><span>auditables</span></div>
+  <div class="kpi"><b id="s-ext">–</b><span>por extraer</span></div>
+  <div class="kpi"><b id="s-ver">–</b><span>por auditar</span></div>
+  <div class="kpi"><b id="s-rev">–</b><span>por revisar</span></div>
+</div>
+
+<nav>
+  <button data-tab="t1" class="on">1 · Extraer<b id="n1">–</b></button>
+  <button data-tab="t2">2 · Auditar<b id="n2">–</b></button>
+  <button data-tab="t3">3 · Revisar<b id="n3">–</b></button>
+  <button data-tab="t4">4 · Resultados</button>
+  <button data-tab="t5">5 · Mantenimiento y entrenamiento<b id="n5">–</b></button>
+</nav>
+
+<!-- ============ PASO 1 ============ -->
+<section class="tab on" id="t1"><div class="pad">
+
+  <div class="cuenta">
+    <div><b id="c-pend">–</b><span>pendientes de extracción</span></div>
+    <div><b id="c-entrega">–</b><span>en esta tanda</span></div>
+    <div><b id="c-resto">–</b><span>quedan para después</span></div>
+  </div>
+
+  <div class="paso">
+    <h2><i>a</i>Copia estos tickets al extractor</h2>
+    <p id="p1a">Cargando…</p>
+    <textarea class="lista" id="ext-lista" readonly placeholder="No hay tickets pendientes de extracción."></textarea>
+    <div class="acciones">
+      <button class="btn" id="b-copiar">Copiar lista</button>
+      <a class="btn sec" id="a-extractor" href="#" target="_blank" rel="noopener">Abrir el extractor</a>
+      <button class="btn sec" id="b-refrescar">Actualizar</button>
+      <span class="msg" id="m1a"></span>
+    </div>
+  </div>
+
+  <div class="paso">
+    <h2><i>b</i>Sube el CSV que devolvió el extractor</h2>
+    <p>Se procesa en el navegador y se sube por partes, así aguanta las tandas
+       grandes. Los tickets ya auditados no se tocan: su conversación queda
+       congelada como estaba cuando se emitió el veredicto.</p>
+    <input type="file" id="csv" accept=".csv,text/csv">
+    <div class="barra"><i id="prog"></i></div>
+    <div class="acciones">
+      <button class="btn" id="b-subir" disabled>Procesar CSV</button>
+      <span class="msg" id="m1b"></span>
+    </div>
+    <div id="r1b"></div>
+  </div>
+
+</div></section>
+
+<!-- ============ PASO 2 ============ -->
+<section class="tab" id="t2"><div class="pad">
+
+  <div class="desat" id="desat">
+    <h2><span class="luz"></span><span id="d-titulo">Modo automático</span></h2>
+    <p>Deja el sistema auditando solo, sin que nadie tenga esta pestaña abierta.
+       Un disparador despierta cada pocos minutos, audita los que quepan en su
+       turno y se vuelve a dormir. Cuando la cola se vacía sigue despierto: si
+       el paso 1 trae tickets nuevos, los toma sin que enciendas nada.</p>
+    <div class="acciones" style="margin-top:0">
+      <button class="btn" id="b-auto-on">Encender</button>
+      <button class="btn sec" id="b-auto-off" style="display:none">Apagar</button>
+      <select id="auto-cada" style="font:inherit;font-size:13px;padding:6px 8px;
+        border:1px solid var(--line);border-radius:6px;background:var(--bg);color:inherit">
+        <option value="5">cada 5 min</option>
+        <option value="10">cada 10 min</option>
+        <option value="15">cada 15 min</option>
+        <option value="30">cada 30 min</option>
+      </select>
+      <button class="btn sec" id="b-auto-ver">¿Cuánto falta?</button>
+      <span class="msg" id="m-desat"></span>
+    </div>
+    <div id="d-cuerpo"></div>
+  </div>
+
+  <div class="auto">
+    <h2>Auditar mirando, desde acá</h2>
+    <p>Llama al agente por API, de a un ticket, y va mostrando cada nota apenas
+       sale. Puedes parar cuando quieras: lo auditado queda guardado. Esto
+       necesita la pestaña abierta: si la cierras, se detiene.</p>
+    <div id="choque" class="nota-pie" style="display:none;color:var(--warn)"></div>
+    <div class="acciones" style="margin-top:0">
+      <button class="btn" id="b-auto">Auditar los pendientes</button>
+      <input type="text" id="auto-n" value="5" style="width:72px;text-align:center"
+             title="Cuántos auditar en esta tanda. Vacío = todos.">
+      <button class="btn sec" id="b-parar" style="display:none">Parar</button>
+      <span class="msg" id="m-auto"></span>
+    </div>
+    <div class="corridas" id="corridas" style="display:none"></div>
+  </div>
+
+  <div class="paso">
+    <h2><i>a</i>O hazlo a mano: elige un ticket y copia su prompt</h2>
+    <p id="p2a">Cargando…</p>
+    <div class="scroll" id="tabla2"><div class="vacio">Cargando…</div></div>
+  </div>
+
+  <div class="paso" id="bloque-prompt" style="display:none">
+    <h2><i>b</i>Pégalo en el agente y trae la respuesta</h2>
+    <p>Ticket <b id="t2-ticket"></b>. Copia el prompt, pégalo en el Marketplace
+       Agent, y trae de vuelta sus dos bloques, cada uno en su caja.</p>
+    <textarea class="pegar" id="prompt" readonly></textarea>
+    <div class="acciones">
+      <button class="btn" id="b-copiar-prompt">Copiar prompt</button>
+      <a class="btn sec" id="a-agente" href="#" target="_blank" rel="noopener">Abrir el agente</a>
+      <span class="msg" id="m2a"></span>
+    </div>
+
+    <p class="sub">Bloque CSV — los veredictos</p>
+    <textarea class="corto" id="resp-csv"
+      placeholder="criterio_id;veredicto;autor_evaluado;cita;fuente;confianza&#10;C01;cumple;...&#10;C02;no_cumple;..."></textarea>
+
+    <p class="sub">Bloque JSON — los datos del viaje <span style="font-weight:400;color:var(--faint)">(opcional)</span></p>
+    <textarea class="corto" id="resp-json"
+      placeholder='{ "ticket": "...", "datos_del_viaje": { }, "hallazgos": [], "datos_que_faltaron": [] }'></textarea>
+
+    <div class="acciones">
+      <button class="btn" id="b-guardar-ver">Procesar veredicto</button>
+      <button class="btn sec" id="b-cancelar">Cerrar</button>
+      <span class="msg" id="m2b"></span>
+    </div>
+    <div id="r2b"></div>
+  </div>
+
+</div></section>
+
+<!-- ============ PASO 3 ============ -->
+<section class="tab" id="t3">
+  <?!= include(conArchivoRevision()); ?>
+</section>
+
+<!-- ============ PASO 4 ============ -->
+<section class="tab" id="t4">
+  <?!= include(conArchivoReportes()); ?>
+</section>
+
+<!-- ============ PASO 5 ============ -->
+<section class="tab" id="t5"><div class="pad">
+  <p id="p5">Revisando el estado del sistema…</p>
+  <div id="salud"></div>
+  <div class="acciones" style="margin-top:14px">
+    <button class="btn sec" id="b-salud">Revisar de nuevo</button>
+    <button class="btn sec" id="b-faltan">¿Por qué faltan tickets?</button>
+    <span class="msg" id="m5"></span>
+  </div>
+  <div id="faltan"></div>
+
+  <!-- ===== ENTRENAMIENTO =====
+       Vive acá y no en una pestaña propia a propósito: es una tarea de
+       Calidad, de las de una vez cada tanto, y una pestaña más en la barra
+       le daría un peso diario que no tiene. -->
+  <div class="ent" id="ent">
+    <h3>Base de entrenamiento</h3>
+    <p class="ent-int">Todo lo que los supervisores marcaron como desacuerdo, en un Excel:
+      el criterio, la cita en que se basó el modelo, cuál era el veredicto correcto, de qué
+      tipo fue el error y el comentario de quien lo revisó. Es lo que se usa para corregir
+      la redacción de un criterio o para justificar una integración que falta.</p>
+    <div class="ent-kpis" id="ent-kpis"></div>
+    <div class="acciones">
+      <button class="btn" id="b-ent">Generar el Excel</button>
+      <span class="msg" id="m-ent"></span>
+    </div>
+    <p class="ent-pie">El archivo queda en la misma carpeta de Drive donde vive el libro de
+      auditorías. Se genera uno nuevo cada vez: así se puede comparar una tanda con la
+      anterior en vez de pisarla.</p>
+  </div>
+</div></section>
+
+<script>
+(function(){
+  var TICKET_ACTUAL = null, FILAS = [];
+
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function txt(e){ return e && e.message ? e.message : String(e); }
+  function copiar(ta, msg){
+    ta.select(); ta.setSelectionRange(0, 999999);
+    try { document.execCommand('copy'); msg.className='msg ok'; msg.textContent='Copiado.'; }
+    catch(e){ msg.className='msg err'; msg.textContent='No pude copiar; selecciona y copia a mano.'; }
+  }
+
+  // ---------- una llamada no se pisa a sí misma ----------
+  //
+  // Recargar la consola mientras algo seguía cargando lanzaba otra copia de lo
+  // mismo encima. Cuatro recargas en tres minutos apilaron diez llamadas sobre
+  // una cola que ya iba lenta, y ninguna llegó: eso es lo que se veía como la
+  // app "pegada". Apps Script las atiende de a poco, así que la segunda no
+  // adelanta nada — solo retrasa a la primera.
+  //
+  // Si mientras una está en vuelo se pide otra igual, no se descarta: se
+  // guarda y se lanza cuando la primera vuelve. Descartarla dejaría la
+  // pantalla con datos viejos justo después de cambiar de audiencia, que es
+  // peor que esperar.
+  var ENVUELO = {};
+
+  function pedir(nombre, args, ok, fail){
+    if (ENVUELO[nombre]){ ENVUELO[nombre].repetir = { args: args || [], ok: ok, fail: fail }; return; }
+    lanzar(nombre, args || [], ok, fail);
+  }
+
+  function lanzar(nombre, args, ok, fail){
+    ENVUELO[nombre] = { repetir: null };
+    var fin = function(){
+      var r = ENVUELO[nombre] && ENVUELO[nombre].repetir;
+      delete ENVUELO[nombre];
+      if (r) lanzar(nombre, r.args, r.ok, r.fail);
+    };
+    var run = google.script.run
+      .withSuccessHandler(function(x){ fin(); if (ok) ok(x); })
+      .withFailureHandler(function(e){ fin(); if (fail) fail(e); });
+    run[nombre].apply(run, args);
+  }
+
+  // ---------- pestañas ----------
+  document.querySelectorAll('nav button').forEach(function(b){
+    b.onclick = function(){
+      document.querySelectorAll('nav button').forEach(function(x){ x.classList.remove('on'); });
+      document.querySelectorAll('.tab').forEach(function(x){ x.classList.remove('on'); });
+      b.classList.add('on'); $(b.dataset.tab).classList.add('on');
+      if (b.dataset.tab === 't2'){ cargarPendientes2(); cargarDesat(); }
+      if (b.dataset.tab === 't3' && window.REVISION)  window.REVISION.init();
+      if (b.dataset.tab === 't4' && window.REPORTES) window.REPORTES.init();
+      if (b.dataset.tab === 't5') cargarSalud();
+    };
+  });
+
+  // ---------- audiencia ----------
+  // El filtro vive en una sola variable y todas las llamadas al servidor la
+  // pasan. Sin esto la cabecera diría "63 auditables" y la tabla de abajo
+  // mostraría los de las dos audiencias: dos números que no cuadran y nadie
+  // sabe cuál creer.
+  var AUDIENCIA = '';
+
+  function cargarAudiencias(){
+    pedir('conAudiencias', [], pintarAudiencias, function(){ /* sin selector, la consola sigue sirviendo */ });
+  }
+
+  function pintarAudiencias(r){
+    (function(){
+      var l = (r && r.audiencias) || [];
+      if (l.length < 2) return;              // una sola audiencia: sin selector
+      var sel = $('f-aud');
+      l.forEach(function(a){
+        var o = document.createElement('option');
+        o.value = a.clave;
+        o.textContent = a.nombre + ' (' + a.auditables + ')';
+        sel.appendChild(o);
+      });
+      $('caja-aud').style.display = 'flex';
+      sel.onchange = function(){
+        AUDIENCIA = sel.value;
+        $('sub').textContent = sel.value
+          ? sel.options[sel.selectedIndex].textContent.replace(/ \(\d+\)$/, '') + ' · Cabify Chile'
+          : 'Cabify Chile';
+        refrescarEstado(); cargarLista(); cargarPendientes2();
+        // Las pestañas 3 y 4 se enteran cuando se abren, no ahora: recargarlas
+        // en segundo plano gasta llamadas en pantallas que nadie está mirando.
+      };
+    })();
+  }
+
+  // ---------- estado ----------
+  function refrescarEstado(){
+    pedir('conEstado', [AUDIENCIA], pintarEstado);
+  }
+
+  function pintarEstado(s){
+    if (!s) return;
+    $('s-aud').textContent = s.auditables;
+    $('s-ext').textContent = s.pendExtraccion;
+    $('s-ver').textContent = s.pendVeredicto;
+    $('s-rev').textContent = s.pendRevision;
+    $('n1').textContent = s.pendExtraccion;
+    $('n2').textContent = s.pendVeredicto;
+    $('n3').textContent = s.pendRevision;
+  }
+  window.CONSOLA = { refrescarEstado: refrescarEstado,
+                     audiencia: function(){ return AUDIENCIA; } };
+
+  // ---------- paso 5: mantenimiento ----------
+  // ---------- entrenamiento ----------
+  function cargarEntrenamiento(){
+    var k = $('ent-kpis');
+    k.innerHTML = '<div class="vacio"><b>…</b><span>contando</span></div>';
+    pedir('entResumen', [], function(r){
+      var tipo = r.porTipo || {};
+      var vacio = !r.desacuerdos;
+      k.innerHTML =
+        caja(r.desacuerdos, 'desacuerdos', vacio) +
+        caja(r.criterios, 'criterios tocados', vacio) +
+        caja(r.revisiones, 'tickets revisados', vacio) +
+        caja(tipo.regla || 0, 'regla ambigua', !tipo.regla) +
+        caja(tipo.dato || 0, 'faltó un dato', !tipo.dato) +
+        caja(tipo.criterio || 0, 'juzgó mal', !tipo.criterio);
+      $('b-ent').disabled = vacio;
+      $('m-ent').className = 'msg';
+      $('m-ent').textContent = vacio
+        ? 'Todavía no hay nada que exportar: el archivo se llena con lo que marcan los supervisores en el paso 3.'
+        : (r.desde ? 'Revisiones desde el ' + esc(r.desde) + ' hasta el ' + esc(r.hasta) + '.' : '');
+    }, function(e){
+      k.innerHTML = '';
+      $('m-ent').className = 'msg err'; $('m-ent').textContent = txt(e);
+    });
+  }
+
+  function caja(n, etq, apagada){
+    return '<div' + (apagada ? ' class="vacio"' : '') + '><b>' + n + '</b><span>' +
+           esc(etq) + '</span></div>';
+  }
+
+  $('b-ent').onclick = function(){
+    var b = this; b.disabled = true;
+    $('m-ent').className = 'msg';
+    // Se avisa que tarda ANTES de que parezca colgado. Armar el archivo lee
+    // los veredictos y los convierte: son decenas de segundos, no milisegundos.
+    $('m-ent').textContent = 'Armando el archivo… puede tardar hasta un minuto.';
+    google.script.run.withSuccessHandler(function(r){
+      b.disabled = false;
+      if (!r.ok){
+        $('m-ent').className = 'msg warn'; $('m-ent').textContent = r.mensaje;
+        return;
+      }
+      $('m-ent').className = r.aviso ? 'msg warn' : 'msg ok';
+      $('m-ent').innerHTML = (r.aviso ? esc(r.aviso) + ' ' : '') +
+        r.filas + ' desacuerdos de ' + r.criterios + ' criterios, sobre ' + r.revisiones +
+        ' tickets revisados. <a href="' + esc(r.url) + '" target="_blank" rel="noopener">' +
+        'Abrir ' + esc(r.nombre) + '</a>';
+      window.open(r.url, '_blank');
+    }).withFailureHandler(function(e){
+      b.disabled = false;
+      $('m-ent').className = 'msg err'; $('m-ent').textContent = txt(e);
+    }).entExportar();
+  };
+
+  function cargarSalud(){
+    cargarEntrenamiento();
+    $('p5').textContent = 'Revisando el estado del sistema…';
+    $('salud').innerHTML = '';
+    google.script.run.withSuccessHandler(function(s){
+      $('n5').textContent = s.pendientes;
+      $('p5').innerHTML = s.pendientes
+        ? s.problemas + ' con arreglo automático y ' + s.decisiones +
+          ' que necesitan que decidas tú. Revisado a las ' + esc(s.actualizado) + '.'
+        : 'Nada pendiente. Revisado a las ' + esc(s.actualizado) + '.';
+      $('salud').innerHTML = s.items.map(function(x){
+        var etq = x.nivel === 'problema' ? 'arreglable' :
+                  x.nivel === 'decision' ? 'tú decides' : 'info';
+        var h = '<div class="item ' + x.nivel + '"><h3><span class="etq">' + etq + '</span>' +
+                esc(x.titulo) + '</h3>' +
+                (x.detalle ? '<p>' + esc(x.detalle) + '</p>' : '') +
+                (x.sugerencia ? '<p class="sug">' + esc(x.sugerencia) + '</p>' : '');
+        if (x.accion || (x.tickets && x.tickets.length)) h += '<div class="fila">';
+        if (x.accion)
+          h += '<button class="btn" data-rep="' + esc(x.accion.id) + '">' +
+               esc(x.accion.etiqueta) + '</button>';
+        if (x.tickets && x.tickets.length)
+          h += '<button class="btn sec" data-tks="' + esc(x.id) + '">Ver los ' +
+               x.tickets.length + ' tickets</button>';
+        if (x.accion || (x.tickets && x.tickets.length)) h += '<span class="msg"></span></div>';
+        if (x.tickets && x.tickets.length)
+          h += '<textarea id="tks-' + esc(x.id) + '" readonly style="display:none">' +
+               esc(x.tickets.join(',')) + '</textarea>';
+        return h + '</div>';
+      }).join('');
+      enlazarSalud();
+    }, function(e){
+      $('p5').textContent = 'No pude revisar el estado: ' + txt(e);
+    });
+  }
+
+  function enlazarSalud(){
+    // Los tickets se muestran para copiar, no se actúa sobre ellos desde acá:
+    // lo que rehace trabajo se decide en su propio paso.
+    $('salud').querySelectorAll('[data-tks]').forEach(function(b){
+      b.onclick = function(){
+        var ta = $('tks-' + b.dataset.tks);
+        var oculto = ta.style.display === 'none';
+        ta.style.display = oculto ? 'block' : 'none';
+        b.textContent = oculto ? 'Ocultar' : 'Ver los tickets';
+        if (oculto){ ta.select(); ta.setSelectionRange(0, 999999); }
+      };
+    });
+    $('salud').querySelectorAll('[data-rep]').forEach(function(b){
+      b.onclick = function(){
+        var msg = b.parentNode.querySelector('.msg');
+        b.disabled = true; msg.className = 'msg'; msg.textContent = 'Trabajando…';
+        google.script.run.withSuccessHandler(function(r){
+          msg.className = 'msg ok'; msg.textContent = r.mensaje;
+          refrescarEstado();
+          setTimeout(cargarSalud, 900);
+        }).withFailureHandler(function(e){
+          b.disabled = false;
+          msg.className = 'msg err'; msg.textContent = txt(e);
+        }).conRepararAhora(b.dataset.rep);
+      };
+    });
+  }
+
+  $('b-salud').onclick = cargarSalud;
+
+  // El embudo: en cuál de los cuatro filtros se quedan los tickets. Se pide
+  // aparte porque recorre el histórico y no hace falta al abrir la pestaña.
+  $('b-faltan').onclick = function(){
+    $('faltan').innerHTML = '<div class="embudo"><h3>Contando…</h3></div>';
+    google.script.run.withSuccessHandler(function(r){
+      if (r.error){ $('faltan').innerHTML = '<div class="embudo"><h3>' + esc(r.error) + '</h3></div>'; return; }
+      $('faltan').innerHTML = '<div class="embudo"><h3>De dónde salen los números' +
+        (r.audiencia ? ' — ' + esc(r.audiencia) : '') + '</h3>' +
+        r.pasos.map(function(p){
+          var h = '<div class="paso"><div class="num">' + p.cuenta +
+                  (p.perdidos ? '<br><span class="cae" style="font-size:12px">−' + p.perdidos + '</span>' : '') +
+                  '</div><div><div class="qt">' + esc(p.paso) + '</div>';
+          if (p.nota) h += '<div class="mini">' + esc(p.nota) + '</div>';
+          if (p.detalle && p.detalle.length)
+            h += '<ul>' + p.detalle.map(function(d){
+              return '<li>' + d.cuantos + ' · ' + esc(d.motivo) +
+                     (d.ejemplos.length ? ' <span class="mini">(' + esc(d.ejemplos.join(', ')) + '…)</span>' : '') +
+                     '</li>'; }).join('') + '</ul>';
+          if (p.tickets && p.tickets.length)
+            h += '<textarea readonly style="display:block;margin-top:8px">' +
+                 esc(p.tickets.join(',')) + '</textarea>';
+          return h + '</div></div>';
+        }).join('') + '</div>';
+    }).withFailureHandler(function(e){
+      $('faltan').innerHTML = '<div class="embudo"><h3>No pude contarlo: ' + esc(txt(e)) + '</h3></div>';
+    }).conPorQueFaltan(AUDIENCIA);
+  };
+
+  // ---------- paso 1 ----------
+  function cargarLista(){
+    $('p1a').textContent = 'Cargando…';
+    pedir('conListaParaExtraer', [AUDIENCIA], pintarLista,
+          function(e){ $('p1a').textContent = 'No pude cargar: ' + txt(e); });
+  }
+
+  function pintarLista(r){
+    (function(){
+      $('c-pend').textContent = r.total;
+      $('c-entrega').textContent = r.entregados;
+      $('c-resto').textContent = r.restantes;
+      $('ext-lista').value = r.lista;
+      $('b-copiar').disabled = !r.lista;
+      $('p1a').textContent = !r.total
+        ? 'No hay tickets pendientes de extracción. Todos los auditables ya tienen su conversación.'
+        : r.restantes
+          ? 'Hay ' + r.total + ' pendientes y el extractor procesa ' + r.tope + ' por vez. Abajo van los primeros ' +
+            r.entregados + '; cuando subas ese CSV, acá aparecerán los ' + r.restantes + ' que quedan.'
+          : 'Hay ' + r.total + ' tickets pendientes y caben todos en una tanda.';
+    })();
+  }
+
+  $('b-copiar').onclick   = function(){ copiar($('ext-lista'), $('m1a')); };
+  $('b-refrescar').onclick = function(){ cargarLista(); refrescarEstado(); };
+
+  $('csv').onchange = function(){
+    var f = this.files[0];
+    if (!f){ $('b-subir').disabled = true; return; }
+    $('m1b').className='msg'; $('m1b').textContent = 'Leyendo ' + f.name + '…';
+    var lector = new FileReader();
+    lector.onload = function(){
+      try {
+        FILAS = parseCSV(String(lector.result).replace(/^﻿/, ''));
+        if (FILAS.length < 2) throw new Error('El archivo no tiene filas de datos.');
+        var cab = FILAS[0].map(function(x){ return String(x).trim().toLowerCase(); });
+        if (cab.indexOf('ticket_id') < 0 || cab.indexOf('comments') < 0)
+          throw new Error('No parece el CSV del extractor: le faltan las columnas ticket_id y comments.');
+        $('m1b').className='msg ok';
+        $('m1b').textContent = (FILAS.length - 1) + ' filas leídas. Ya puedes procesarlo.';
+        $('b-subir').disabled = false;
+      } catch(e){
+        $('m1b').className='msg err'; $('m1b').textContent = txt(e);
+        $('b-subir').disabled = true; FILAS = [];
+      }
+    };
+    lector.readAsText(f);
+  };
+
+  $('b-subir').onclick = function(){
+    if (!FILAS.length) return;
+    var btn = this; btn.disabled = true;
+    var cuerpo = FILAS.slice(1), TAM = 100, i = 0;
+    $('r1b').innerHTML = ''; $('m1b').className='msg'; $('m1b').textContent = 'Subiendo…';
+
+    google.script.run.withSuccessHandler(function(){ trozo(); })
+      .withFailureHandler(falla).conCargaIniciar(FILAS[0]);
+
+    function trozo(){
+      if (i >= cuerpo.length){ procesar(); return; }
+      var parte = cuerpo.slice(i, i + TAM);
+      google.script.run.withSuccessHandler(function(){
+        i += parte.length;
+        var pct = Math.round(i / cuerpo.length * 100);
+        $('prog').style.width = pct + '%';
+        $('m1b').textContent = 'Subiendo… ' + pct + '%';
+        trozo();
+      }).withFailureHandler(falla).conCargaTrozo(parte);
+    }
+    function procesar(){
+      $('m1b').textContent = 'Procesando en el servidor. Con tandas grandes puede tardar un par de minutos.';
+      google.script.run.withSuccessHandler(function(r){
+        $('prog').style.width = '100%';
+        $('m1b').className='msg ok';
+        $('m1b').textContent = 'Listo: ' + r.tickets + ' tickets desde ' + r.comentarios + ' comentarios.';
+        $('r1b').innerHTML = '<div class="resultado"><b style="font-size:20px">' + r.extraidosAhora +
+          '</b> tickets salieron de la cola de extracción.' +
+          '<div class="nota-pie">Por canal: ' + esc(JSON.stringify(r.porCanal)) + '</div></div>';
+        btn.disabled = false; FILAS = []; $('csv').value = '';
+        cargarLista(); refrescarEstado();
+      }).withFailureHandler(falla).conCargaProcesar();
+    }
+    function falla(e){
+      $('m1b').className='msg err'; $('m1b').textContent = 'Se cortó: ' + txt(e);
+      btn.disabled = false;
+    }
+  };
+
+  /** CSV con comillas y saltos de línea dentro de un campo. */
+  function parseCSV(texto){
+    var filas=[], fila=[], campo='', i=0, enCom=false, d=detectar(texto);
+    while (i < texto.length){
+      var ch = texto[i];
+      if (enCom){
+        if (ch === '"'){ if (texto[i+1] === '"'){ campo+='"'; i+=2; continue; } enCom=false; i++; continue; }
+        campo += ch; i++; continue;
+      }
+      if (ch === '"'){ enCom = true; i++; continue; }
+      if (ch === d){ fila.push(campo); campo=''; i++; continue; }
+      if (ch === '\r'){ i++; continue; }
+      if (ch === '\n'){ fila.push(campo); filas.push(fila); fila=[]; campo=''; i++; continue; }
+      campo += ch; i++;
+    }
+    if (campo.length || fila.length){ fila.push(campo); filas.push(fila); }
+    return filas.filter(function(f){ return !(f.length===1 && f[0]===''); });
+  }
+  function detectar(t){
+    var linea = t.slice(0, 4000).split('\n')[0];
+    return (linea.split(';').length > linea.split(',').length) ? ';' : ',';
+  }
+
+  // ---------- paso 2 ----------
+  function cargarPendientes2(){
+    $('tabla2').innerHTML = '<div class="vacio">Cargando…</div>';
+    pedir('conPendientesVeredicto', [AUDIENCIA], function(l){
+      if (!l.length){
+        $('p2a').textContent = 'No hay tickets esperando veredicto.';
+        $('tabla2').innerHTML = '<div class="vacio">Nada pendiente. Si esperabas ver algo, primero extrae en el paso 1.</div>';
+        return;
+      }
+      var sinFecha = l.filter(function(x){ return x.sinFecha; }).length;
+      $('p2a').innerHTML = l.length + ' tickets esperan veredicto. Van de a uno.' +
+        (sinFecha ? ' <span class="mini alerta">' + sinFecha + ' sin fecha del viaje</span> — a esos el agente ' +
+                    'no les podrá consultar el viaje.' : '');
+      $('tabla2').innerHTML =
+        '<table><thead><tr><th>Ticket</th><th>Audiencia</th><th>Canal</th><th>Motivo</th><th>Turnos</th><th>Viaje</th><th></th></tr></thead><tbody>' +
+        l.map(function(x){
+          return '<tr data-t="' + esc(x.ticket) + '"><td class="n">' + esc(x.ticket) + '</td>' +
+            '<td>' + esc(x.audienciaNombre || x.audiencia || '—') + '</td>' +
+            '<td>' + esc(x.canal) + '</td><td>' + esc(x.motivo || '—') + '</td>' +
+            '<td>' + esc(x.turnos) + '</td>' +
+            '<td>' + (x.sinFecha ? '<span class="mini alerta">sin fecha</span>'
+                                 : '<span class="mini bien">ok</span>') + '</td>' +
+            '<td><button class="elegir">auditar</button></td></tr>';
+        }).join('') + '</tbody></table>';
+      $('tabla2').querySelectorAll('.elegir').forEach(function(b){
+        b.onclick = function(){ elegir(b.closest('tr').dataset.t); };
+      });
+    }, function(e){
+      $('tabla2').innerHTML = '<div class="vacio">No pude cargar: ' + esc(txt(e)) + '</div>';
+    });
+  }
+
+  function elegir(ticket){
+    TICKET_ACTUAL = ticket;
+    document.querySelectorAll('#tabla2 tr').forEach(function(tr){
+      tr.classList.toggle('sel', tr.dataset.t === ticket); });
+    $('bloque-prompt').style.display = 'block';
+    $('t2-ticket').textContent = ticket;
+    $('prompt').value = 'Cargando…';
+    $('resp-csv').value = ''; $('resp-json').value = '';
+    $('m2a').textContent = ''; $('m2b').textContent = ''; $('r2b').innerHTML = '';
+    google.script.run.withSuccessHandler(function(r){
+      $('prompt').value = r.prompt;
+      // Si el prompt se regeneró porque las reglas cambiaron, se dice. No es un
+      // problema ni pide nada: es información de que lo que se va a copiar
+      // acaba de actualizarse.
+      if (r.regenerado){
+        $('m2a').className = 'msg ok';
+        $('m2a').textContent = 'Prompt actualizado a las reglas de hoy.';
+      }
+      $('bloque-prompt').scrollIntoView({ behavior:'smooth', block:'start' });
+    }).withFailureHandler(function(e){
+      $('prompt').value = ''; $('m2a').className='msg err'; $('m2a').textContent = txt(e);
+    }).conPromptDe(ticket);
+  }
+
+  // ---------- modo desatendido (el disparador) ----------
+  //
+  // El estado se pide al abrir la pestaña porque autoEstado() es barato a
+  // propósito: una propiedad del script y las últimas líneas de la bitácora.
+  // La cuenta de pendientes NO viene ahí — recorre hojas — y por eso está
+  // detrás del botón "¿Cuánto falta?".
+  var DESAT = null;
+
+  function pintarDesat(a){
+    DESAT = a;
+    var caja = $('desat');
+    caja.className = 'desat' + (a.activo ? ' on' : '');
+    $('b-auto-on').style.display  = a.activo ? 'none' : '';
+    $('b-auto-off').style.display = a.activo ? '' : 'none';
+    if (a.minutos) $('auto-cada').value = String(a.minutos);
+
+    $('d-titulo').textContent = a.activo
+      ? (a.atascado ? 'Modo automático encendido · atascado'
+        : (a.enEspera ? 'Modo automático encendido · sin cola' : 'Modo automático trabajando'))
+      : 'Modo automático apagado';
+    if (a.atascado) caja.className = 'desat';
+
+    var h = '';
+
+    if (a.descuadre)
+      h += '<div class="aviso">' + esc(a.descuadre) + '</div>';
+
+    // "Encendido y sin cola" suena a que terminó. Si lo que hay es todo
+    // apartado, no terminó: no tiene nada que intentar.
+    if (a.atascado)
+      h += '<div class="aviso"><b>Sin nada que intentar.</b> Los pendientes que quedaban ' +
+           'están apartados por errores repetidos, así que el modo despierta y se vuelve a ' +
+           'dormir sin auditar. Mira los motivos abajo.</div>';
+
+    if (!a.activo && a.apagadoPor)
+      h += '<div class="aviso">Se apagó: ' + esc(a.apagadoPor) + '</div>';
+
+    if (a.activo || a.tandas){
+      h += '<div class="cifras">' +
+        '<div><b>' + a.auditados + '</b>auditados</div>' +
+        '<div><b>' + a.tandas + '</b>tandas</div>' +
+        (a.fallidos ? '<div><b>' + a.fallidos + '</b>con error</div>' : '') +
+        (a.mediaSegundos ? '<div><b>' + a.mediaSegundos + ' s</b>por auditoría</div>' : '') +
+        (a.porTanda ? '<div><b>' + a.porTanda + '</b>por tanda</div>' : '') +
+        '<div><b>' + (a.audiencia ? esc(a.audiencia) : 'todas') + '</b>audiencia</div>' +
+        '</div>';
+      if (a.ultimaTanda)
+        h += '<p class="nota-pie">Última tanda: ' + esc(a.ultimaTanda) +
+             (a.minutosDesdeUltima !== null && a.minutosDesdeUltima !== undefined
+                ? ' (hace ' + a.minutosDesdeUltima + ' min)' : '') + '.</p>';
+    }
+
+    // Los apartados son la parte que hay que ver: un ticket que falla siempre
+    // sale de la cola para no bloquearla, y si nadie lo mira se queda fuera.
+    if (a.apartados && a.apartados.length){
+      h += '<div class="aviso"><b>' + a.apartados.length + ' tickets apartados</b> tras ' +
+           a.maxIntentos + ' intentos fallidos. Salieron de la cola para no bloquearla; ' +
+           'el motivo de cada uno está en la bitácora de abajo y en la hoja "' +
+           esc(a.hoja) + '". <button class="btn sec" id="b-auto-retry" ' +
+           'style="margin-left:6px">Devolverlos a la cola</button></div>';
+    }
+
+    if (a.ultimas && a.ultimas.length){
+      h += '<div class="bit"><table><thead><tr><th>Hora</th><th>Ticket</th>' +
+           '<th>Resultado</th><th class="num">Nota</th><th>Detalle</th></tr></thead><tbody>';
+      a.ultimas.forEach(function(u){
+        var cl = /auditado/.test(u.resultado) ? 'ok'
+               : (/error|apartado/.test(u.resultado) ? 'mal'
+               : (/espera|corte/.test(u.resultado) ? 'esp' : ''));
+        h += '<tr><td class="mini">' + esc((u.fecha || '').slice(11)) + '</td>' +
+             '<td class="tk">' + esc(u.ticket || '—') + '</td>' +
+             '<td><span class="res ' + cl + '">' + esc(u.resultado) + '</span></td>' +
+             '<td class="num">' + (u.nota === null || u.nota === '' ? '' : esc(String(u.nota))) + '</td>' +
+             '<td class="mini">' + esc(u.detalle || u.estado || '') + '</td></tr>';
+      });
+      h += '</tbody></table></div>';
+    }
+
+    $('d-cuerpo').innerHTML = h;
+
+    // Los dos ciclos no se coordinan: uno lo conduce esta pestaña y el otro un
+    // disparador. Si corren a la vez pueden tomar el mismo ticket y gastar una
+    // llamada de más. No se bloquea —auditar un ticket concreto a mano es
+    // legítimo— pero se dice.
+    var ch = $('choque');
+    if (ch){
+      ch.style.display = a.activo ? '' : 'none';
+      ch.textContent = a.activo
+        ? 'El modo automático está encendido. Si auditas en paralelo desde acá, los dos ' +
+          'ciclos pueden tomar el mismo ticket y gastar una llamada al agente de más.'
+        : '';
+    }
+
+    var rt = $('b-auto-retry');
+    if (rt) rt.onclick = function(){
+      rt.disabled = true;
+      $('m-desat').className = 'msg'; $('m-desat').textContent = 'Devolviéndolos…';
+      google.script.run.withSuccessHandler(function(x){
+        $('m-desat').className = 'msg ok';
+        $('m-desat').textContent = 'Vuelven a la cola en la próxima tanda.';
+        pintarDesat(x);
+      }).withFailureHandler(function(e){
+        rt.disabled = false;
+        $('m-desat').className = 'msg err'; $('m-desat').textContent = txt(e);
+      }).autoReintentar('');
+    };
+  }
+
+  function cargarDesat(){
+    pedir('autoEstado', [], pintarDesat, function(e){
+      $('d-cuerpo').innerHTML = '<div class="aviso">No pude leer el estado del modo ' +
+        'automático: ' + esc(txt(e)) + '</div>';
+    });
+  }
+
+  $('b-auto-on').onclick = function(){
+    var b = this; b.disabled = true;
+    $('m-desat').className = 'msg'; $('m-desat').textContent = 'Encendiendo…';
+    google.script.run.withSuccessHandler(function(a){
+      b.disabled = false;
+      $('m-desat').className = 'msg ok';
+      $('m-desat').textContent = 'Encendido. La primera tanda arranca en menos de ' +
+                                 (a.minutos || 5) + ' minutos.';
+      pintarDesat(a);
+    }).withFailureHandler(function(e){
+      b.disabled = false;
+      $('m-desat').className = 'msg err'; $('m-desat').textContent = txt(e);
+    }).autoActivar(AUDIENCIA, parseInt($('auto-cada').value, 10));
+  };
+
+  $('b-auto-off').onclick = function(){
+    var b = this; b.disabled = true;
+    $('m-desat').className = 'msg'; $('m-desat').textContent = 'Apagando…';
+    google.script.run.withSuccessHandler(function(a){
+      b.disabled = false;
+      $('m-desat').className = 'msg ok';
+      $('m-desat').textContent = 'Apagado. Lo auditado queda guardado.';
+      pintarDesat(a);
+    }).withFailureHandler(function(e){
+      b.disabled = false;
+      $('m-desat').className = 'msg err'; $('m-desat').textContent = txt(e);
+    }).autoDesactivar('apagado desde el paso 2');
+  };
+
+  $('b-auto-ver').onclick = function(){
+    var b = this; b.disabled = true;
+    $('m-desat').className = 'msg'; $('m-desat').textContent = 'Contando la cola…';
+    google.script.run.withSuccessHandler(function(p){
+      b.disabled = false;
+      if (!p.pendientes){
+        $('m-desat').className = 'msg ok';
+        $('m-desat').textContent = 'No queda nada pendiente en esta audiencia.';
+        return;
+      }
+      $('m-desat').className = 'msg';
+      // Se dice el coste real, no solo el reloj de pared: lo que de verdad
+      // limita esto es la cuota diaria de disparadores, y enterarse a media
+      // tarde es peor que saberlo antes de encender.
+      $('m-desat').textContent = p.pendientes + ' pendientes · ' + p.porTanda +
+        ' por tanda · ' + p.tandas + ' tandas ≈ ' + p.horas + ' h de reloj y ' +
+        p.horasDeCuota + ' h de cuota de disparadores (' + p.mediaSegundos + ' s cada una).';
+    }).withFailureHandler(function(e){
+      b.disabled = false;
+      $('m-desat').className = 'msg err'; $('m-desat').textContent = txt(e);
+    }).autoPronostico(AUDIENCIA);
+  };
+
+  // ---------- ciclo automático ----------
+  var PARAR = false;
+
+  $('b-parar').onclick = function(){ PARAR = true; $('m-auto').textContent = 'Parando…'; };
+
+  $('b-auto').onclick = function(){
+    var n = parseInt($('auto-n').value, 10);
+    $('m-auto').className = 'msg'; $('m-auto').textContent = 'Buscando pendientes…';
+    google.script.run.withSuccessHandler(function(cola){
+      if (!cola.length){
+        $('m-auto').className = 'msg';
+        $('m-auto').textContent = 'No hay tickets esperando veredicto.';
+        return;
+      }
+      correr(cola);
+    }).withFailureHandler(function(e){
+      $('m-auto').className = 'msg err'; $('m-auto').textContent = txt(e);
+    }).conColaDeAuditoria(isNaN(n) ? 0 : n, AUDIENCIA);
+  };
+
+  function correr(cola){
+    PARAR = false;
+    var i = 0, ok = 0, fallo = 0;
+    $('b-auto').disabled = true;
+    $('b-parar').style.display = '';
+    $('corridas').style.display = '';
+    $('corridas').innerHTML = '';
+
+    function siguiente(){
+      if (PARAR || i >= cola.length){
+        $('b-auto').disabled = false;
+        $('b-parar').style.display = 'none';
+        $('m-auto').className = 'msg ok';
+        $('m-auto').textContent = (PARAR ? 'Detenido. ' : 'Listo. ') +
+          ok + ' auditados' + (fallo ? ', ' + fallo + ' con error' : '') + '.';
+        cargarPendientes2(); refrescarEstado();
+        if (window.REVISION) window.REVISION.recargar();
+        return;
+      }
+      var t = cola[i];
+      $('m-auto').className = 'msg';
+      $('m-auto').textContent = 'Auditando ' + t + '  (' + (i + 1) + ' de ' + cola.length +
+                                '). Cada uno tarda cerca de un minuto.';
+      google.script.run.withSuccessHandler(function(r){
+        ok++; i++; pintarCorrida(r, null); siguiente();
+      }).withFailureHandler(function(e){
+        fallo++; i++; pintarCorrida({ ticket: t }, txt(e)); siguiente();
+      }).conAuditarAuto(t);
+    }
+    siguiente();
+  }
+
+  function pintarCorrida(r, error){
+    var d = document.createElement('div');
+    d.className = 'corrida' + (error ? ' mal' : '');
+    if (error){
+      d.innerHTML = '<span class="tk">' + esc(r.ticket) + '</span>' +
+                    '<span class="nt">—</span><span class="det">' + esc(error) + '</span>';
+    } else {
+      var notas = [];
+      if (r.criticos.length) notas.push('críticos: ' + r.criticos.join(','));
+      if (r.porConfirmar.length) notas.push('por confirmar: ' + r.porConfirmar.join(','));
+      if (r.noConcluyentes) notas.push(r.noConcluyentes + ' sin concluir');
+      if (!r.viajeGuardado) notas.push('sin datos del viaje');
+      if (r.promptRegenerado) notas.push('prompt actualizado');
+      d.innerHTML = '<span class="tk">' + esc(r.ticket) + '</span>' +
+        '<span class="nt' + (r.nota === 0 ? ' cero' : '') + '">' + r.nota + '</span>' +
+        '<span class="det">' + esc(r.estado) + ' · cobertura ' + r.cobertura + '% (' +
+        r.evaluados + '/' + r.aplicables + ')' +
+        (notas.length ? ' · ' + esc(notas.join(' · ')) : '') + '</span>';
+    }
+    $('corridas').insertBefore(d, $('corridas').firstChild);
+  }
+
+  $('b-copiar-prompt').onclick = function(){ copiar($('prompt'), $('m2a')); };
+  $('b-cancelar').onclick = function(){
+    $('bloque-prompt').style.display='none'; TICKET_ACTUAL=null;
+    document.querySelectorAll('#tabla2 tr').forEach(function(tr){ tr.classList.remove('sel'); });
+  };
+
+  $('b-guardar-ver').onclick = function(){
+    if (!TICKET_ACTUAL) return;
+    var csv = $('resp-csv').value, json = $('resp-json').value;
+    if (!csv.trim()){
+      $('m2b').className='msg err';
+      $('m2b').textContent='Falta el bloque CSV, que es el que trae los veredictos.';
+      return;
+    }
+    var btn = this; btn.disabled = true;
+    $('m2b').className='msg'; $('m2b').textContent='Procesando…';
+
+    google.script.run.withSuccessHandler(function(r){
+      btn.disabled = false;
+      $('m2b').className='msg ok'; $('m2b').textContent='Guardado.';
+      var avisos = (r.avisos||[]).concat(
+        r.criticos.length ? ['críticos incumplidos: ' + r.criticos.join(', ')] : [],
+        r.porConfirmar.length ? ['críticos por confirmar: ' + r.porConfirmar.join(', ')] : [],
+        r.noConcluyentes ? [r.noConcluyentes + ' criterios quedaron no concluyentes'] : [],
+        r.viajeGuardado ? [] : ['no venía el bloque JSON del viaje']);
+      $('r2b').innerHTML = '<div class="resultado">' +
+        '<div class="nota' + (r.nota === 0 ? ' cero' : '') + '">' + r.nota + '</div>' +
+        '<div style="font-size:12.5px;color:var(--soft);margin-top:5px">' +
+          esc(r.estado) + ' · techo ' + r.techo + ' · cobertura ' + r.cobertura + '% (' +
+          r.evaluados + ' de ' + r.aplicables + ' criterios)</div>' +
+        (avisos.length ? '<ul><li>' + avisos.map(esc).join('</li><li>') + '</li></ul>' : '') +
+      '</div>';
+      $('resp-csv').value = ''; $('resp-json').value = '';
+      cargarPendientes2(); refrescarEstado();
+      if (window.REVISION) window.REVISION.recargar();
+    }).withFailureHandler(function(e){
+      btn.disabled = false;
+      $('m2b').className='msg err'; $('m2b').textContent = txt(e);
+    }).conGuardarVeredicto(TICKET_ACTUAL, csv, json);
+  };
+
+  // ---------- arranque ----------
+  //
+  // UNA llamada, no cuatro. Las cuatro de antes abrían cuatro ejecuciones en
+  // el servidor y cada una releía el histórico entero por su cuenta: cuatro
+  // lecturas de la hoja más pesada solo para dibujar la pantalla de inicio.
+  // Juntas comparten una sola lectura.
+  $('p1a').textContent = 'Cargando…';
+  pedir('conArranque', [AUDIENCIA], function(r){
+    if (r.enlaces){
+      $('a-extractor').href = r.enlaces.extractor;
+      $('a-agente').href = r.enlaces.agente;
+    }
+    if (r.audiencias) pintarAudiencias(r.audiencias);
+    pintarEstado(r.estado);
+    if (r.lista) pintarLista(r.lista);
+    else $('p1a').textContent = 'No pude cargar la lista de extracción.';
+  }, function(e){
+    $('p1a').textContent = 'No pude cargar: ' + txt(e);
+  });
+  // El contador de Mantenimiento NO se pide al arrancar. Lo hacía, y una
+  // revisión lenta bloqueaba la consola entera antes de que se pudiera usar
+  // nada. Un chequeo de mantenimiento no puede tener la capacidad de tumbar
+  // el flujo principal: se ejecuta cuando se abre su pestaña y solo entonces.
+})();
+</script>
+</body>
+</html>
